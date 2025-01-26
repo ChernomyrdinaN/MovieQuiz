@@ -2,9 +2,16 @@ import UIKit
 import Foundation
 
 final class MovieQuizViewController: UIViewController {
-    // MARK: - Lifecycle
-    // MARK: ПЕРЕМЕННЫЕ
+    // MARK: - АУТЛЕТЫ
+    @IBOutlet private weak var imageView: UIImageView!
     
+    @IBOutlet private weak var textLabel: UILabel!
+    @IBOutlet private weak var counterLabel: UILabel!
+    
+    @IBOutlet private weak var noButton: UIButton!
+    @IBOutlet private weak var yesButton: UIButton!
+    
+    // MARK: ПЕРЕМЕННЫЕ
     private let questions: [QuizQuestion] = [ // переменная-массив со списком вопросов
         QuizQuestion (
             image: "The Godfather",
@@ -75,7 +82,7 @@ final class MovieQuizViewController: UIViewController {
     struct QuizResultsViewModel { // структура вью модели "Результат квиза"
         let title: String // заголовок алерта
         let text: String  // количество набранных очков
-        let buttonText: String // текст кнопки алерта
+        let buttonText: String // текст конпки алерта
     }
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -84,7 +91,6 @@ final class MovieQuizViewController: UIViewController {
     }
     
     // MARK: МЕТОДЫ
-    
     private func convert(model: QuizQuestion) -> QuizStepViewModel { //приватный метод конвертации, который возвращает вью модель для главного экрана
         let questionStep = QuizStepViewModel (
             image: UIImage(named: model.image) ?? UIImage(), // инициализация картинки
@@ -153,15 +159,6 @@ final class MovieQuizViewController: UIViewController {
     }
     
     // MARK: БЛОК С АННОТАЦИЕЙ
-    // подключение к интерфейсу
-    
-    @IBOutlet private weak var imageView: UIImageView!
-    @IBOutlet private weak var textLabel: UILabel!
-    @IBOutlet private weak var counterLabel: UILabel!
-    
-    @IBOutlet private weak var noButton: UIButton!
-    @IBOutlet private weak var yesButton: UIButton!
-    
     // обработка нажатия кнопок Да/Het пользователем
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         let currentQuestion = questions[currentQuestionIndex]
