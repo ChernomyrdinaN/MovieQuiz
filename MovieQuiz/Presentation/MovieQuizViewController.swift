@@ -86,6 +86,7 @@ final class MovieQuizViewController: UIViewController {
     }
     override func viewDidLoad() {
         super.viewDidLoad()
+        imageView.layer.cornerRadius = 20
         let currentQuestion = questions[currentQuestionIndex] // вопрос из массива-вопросов по индексу
         show(quiz: convert(model: currentQuestion)) // показ первого вопроса после конвертации вью модели
     }
@@ -111,7 +112,6 @@ final class MovieQuizViewController: UIViewController {
         }
         //imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
-        imageView.layer.cornerRadius = 20
         
         if isCorrect {
             imageView.layer.borderColor = UIColor.ypGreen.cgColor
