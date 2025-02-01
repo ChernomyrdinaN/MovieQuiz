@@ -1,7 +1,7 @@
 import UIKit
 import Foundation
 
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate { // класс подписан на протокол делегата фабрики
     // MARK: - АУТЛЕТЫ
     @IBOutlet private weak var imageView: UIImageView!
     
@@ -15,19 +15,30 @@ final class MovieQuizViewController: UIViewController {
     private var currentQuestionIndex = 0 // переменная с индексом текущего вопроса (начальная)
     private var correctAnswers = 0 // переменная со счетчиком правильных ответов (начальная)
     private let questionsAmount: Int = 10 // переменная-количество вопросов
-    private var questionFactory: QuestionFactory = QuestionFactory() // переменная от фабрики вопросов
+    private let questionFactory: QuestionFactoryProtocol = QuestionFactory() // переменная от фабрики вопросов
     private var currentQuestion: QuizQuestion? // переменная-вопрос показанный пользователю
     
+    // MARK: МЕТОДЫ
     override func viewDidLoad() {
-        super.viewDidLoad()
+        super.viewDidLoad() 
         imageView.layer.cornerRadius = 20
-        if let firstQuestion = questionFactory.requestNextQuestion() { // рапаковка вопроса-опционала
-            currentQuestion = firstQuestion // каждый сгенерированный вопрос сохраняем в свойство
-            show(quiz: convert(model: firstQuestion)) // показ вопроса от фабрики
+        questionFactory.requestNextQuestion() // показ вопроса от фабрики
+        }
+        
+    // MARK: - QuestionFactoryDelegate
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question = question else {
+            return
+        }
+
+        currentQuestion = question
+        let viewModel = convert(model: question)
+        
+        DispatchQueue.main.async { [weak self] in
+            self?.show(quiz: viewModel)
         }
     }
-        
-        // MARK: МЕТОДЫ
+    
         private func convert(model: QuizQuestion) -> QuizStepViewModel { //приватный метод конвертации, который возвращает вью модель для главного экрана
             let questionStep = QuizStepViewModel (
                 image: UIImage(named: model.image) ?? UIImage(), // инициализация картинки
@@ -74,12 +85,8 @@ final class MovieQuizViewController: UIViewController {
             show(quiz:QuizResultsViewModel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть еще раз"))
         } else { // переход в "Вопрос показан"
             currentQuestionIndex += 1
-            if let  nextQuestion = questionFactory.requestNextQuestion() { // рапаковка вопроса-опционала
-                currentQuestion =  nextQuestion// каждый сгенерированный вопрос сохраняем в свойство
-                show(quiz: convert(model:nextQuestion)) // показ вопроса от фабрики
+            self.questionFactory.requestNextQuestion() // показ вопроса от фабрики
             }
-            
-        }
     }
         private func show(quiz result: QuizResultsViewModel) { // приватный метод показа результатов раунда квиза
             let alert = UIAlertController( // создание алерта
@@ -91,12 +98,8 @@ final class MovieQuizViewController: UIViewController {
                 guard let self = self else {return}
                 self.currentQuestionIndex = 0
                 self.correctAnswers = 0
-                
-                if let firstQuestion = self.questionFactory.requestNextQuestion() {
-                    self.currentQuestion = firstQuestion
-                    self.show(quiz: self.convert(model: firstQuestion))
+                questionFactory.requestNextQuestion()
                 }
-            }
             
             alert.addAction(action) // добавление кнопки в алерт
             self.present(alert, animated: true, completion: nil)
