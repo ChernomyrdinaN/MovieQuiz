@@ -61,16 +61,18 @@ class QuestionFactory: QuestionFactoryProtocol { // класс-сервис ге
         )
     ]
     
-    weak var delegate: QuestionFactoryDelegate?
-    
+    weak var delegate: QuestionFactoryDelegate? // используем это свойство для инъекции
+    init (delegate: QuestionFactoryDelegate?) {
+        self.delegate = delegate
+    }
     func requestNextQuestion () { // приватный метод показа следующего вопроса
         guard let index = (0..<questions.count).randomElement() else {
             delegate?.didReceiveNextQuestion(question: nil)
             return
         }
         let question = questions[safe: index]
-         delegate?.didReceiveNextQuestion(question: question) // вызов делегата и передача модели вопроса в него
+        delegate?.didReceiveNextQuestion(question: question) // вызываем делегат и передаем модель вопроса в него
     }
 }
 
-    
+

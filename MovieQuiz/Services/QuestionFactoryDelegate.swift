@@ -7,6 +7,6 @@
 
 import Foundation
 
-protocol QuestionFactoryDelegate: AnyObject { // создание протокола-делегата для фабрики
+protocol QuestionFactoryDelegate: AnyObject { // создаем протокол дляделегата фабрики
     func didReceiveNextQuestion(question: QuizQuestion?) // метод делегата фабрики для вызова готового вопроса
 }
