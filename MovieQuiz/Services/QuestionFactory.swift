@@ -8,6 +8,8 @@
 import Foundation
 
 class QuestionFactory: QuestionFactoryProtocol { // класс-сервис генерации новых вопросов
+    
+    // MARK: ПЕРЕМЕННЫЕ
     private let questions: [QuizQuestion] = [ // переменная-массив со списком вопросов
         QuizQuestion (
             image: "The Godfather",
@@ -60,18 +62,19 @@ class QuestionFactory: QuestionFactoryProtocol { // класс-сервис ге
             correctAnswer: false
         )
     ]
-    
-    weak var delegate: QuestionFactoryDelegate? // используем это свойство для инъекции
+    weak var delegate: QuestionFactoryDelegate? // используем это свойство для инъекции (DI)
     init (delegate: QuestionFactoryDelegate?) {
         self.delegate = delegate
     }
+    
+    // MARK: - МЕТОДЫ
     func requestNextQuestion () { // приватный метод показа следующего вопроса
         guard let index = (0..<questions.count).randomElement() else {
             delegate?.didReceiveNextQuestion(question: nil)
             return
         }
         let question = questions[safe: index]
-        delegate?.didReceiveNextQuestion(question: question) // вызываем делегат и передаем модель вопроса в него
+        delegate?.didReceiveNextQuestion(question: question) // вызываем делегат и передаем в него модель вопроса
     }
 }
 

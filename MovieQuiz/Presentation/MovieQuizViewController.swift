@@ -1,7 +1,7 @@
 import UIKit
 import Foundation
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate { // класс подписываем на протокол делегата фабрики
+final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ // класс подписываем на протокол делегата фабрики и алерта
     // MARK: ПЕРЕМЕННЫЕ/АУТЛЕТЫ
     @IBOutlet private weak var imageView: UIImageView!
     
@@ -15,15 +15,21 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var currentQuestionIndex = 0 // переменная с индексом текущего вопроса (начальная)
     private var correctAnswers = 0 // переменная со счетчиком правильных ответов (начальная)
     private let questionsAmount: Int = 10 // переменная-количество вопросов
-    private var questionFactory: QuestionFactoryProtocol? // переменная-протокол от фабрики вопросов, с учетом DI через инициализатор
+    private var questionFactory: QuestionFactoryProtocol? // переменная-протокол от фабрики вопросов, с учетом DI
     private var currentQuestion: QuizQuestion? // переменная-вопрос показанный пользователю
+    private var alertDialog: AlertPresenter? // созадаем экземпляр клааса AlertPresenter
+    private var statisticService: StatisticService? // создаем экземпляр класса StatisticService
     
     // MARK: - МЕТОДЫ
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         imageView.layer.cornerRadius = 20
-        questionFactory = QuestionFactory (delegate: self)
+        questionFactory = QuestionFactory(delegate: self)
         questionFactory?.requestNextQuestion() // используем ? при обращении к свойствам и методам опционального типа данных
+        alertDialog = AlertPresenter(alertController: self) // инициализация 
+        statisticService = StatisticService() // инициализация 
+        
     }
     
     // MARK: - МЕТОДЫ/делегат
@@ -41,7 +47,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel { //приватный метод конвертации, который возвращает вью модель для главного экрана
         let questionStep = QuizStepViewModel (
-            image: UIImage(named: model.image) ?? UIImage(), // инициализация картинки
+            image: UIImage(named: model.image) ?? UIImage(), // инициализация
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
         return questionStep
@@ -71,7 +77,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     private func dispatch() { // приватный метод-диспетчеризации позволяет откладывать выолнение функции на 1 сек
         DispatchQueue.main.asyncAfter (deadline: .now() + 1.0) { [weak self] in // используем слабую ссылку во избежании увеличения счетчика ссылок объекта
-            guard let self = self else {return}
+            guard let self = self else { return }
             self.showNextQuestionOrResults()
             self.imageView.layer.borderWidth = 0
             self.yesButton.isEnabled = true
@@ -81,21 +87,33 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private func showNextQuestionOrResults () { // приватный метод перехода в один из сценариев
         if currentQuestionIndex == questionsAmount - 1 { // переход в "Результат квиза"
-            let text = "Ваш результат: \(correctAnswers)/10"
-            show(quiz:QuizResultsViewModel(title: "Этот раунд окончен!", text: text, buttonText: "Сыграть еще раз"))
+            statisticService?.store(correct: correctAnswers, total: questionsAmount)
+            let alert = AlertModel(
+                title: "Этот раунд окончен!",
+                message: "Ваш результат: \(correctAnswers)/\(questionsAmount)\n Количество сыграных квизов: \(statisticService?.gamesCount ?? 1) \n Рекорд: \(statisticService?.bestGame.correct ?? correctAnswers)/\(statisticService?.bestGame.total ?? questionsAmount) (\(statisticService?.bestGame.date.dateTimeString ?? Date().dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statisticService?.totalAccuracy ?? 0))%",
+                buttonText: "Сыграть еще раз!"
+            ) { [weak self] in
+                guard let self = self else { return }
+                self.currentQuestionIndex = 0
+                self.correctAnswers = 0
+                self.questionFactory?.requestNextQuestion()
+            }
+            
+            alertDialog?.alertShow(model: alert)
+            
         } else { // переход в "Вопрос показан"
             currentQuestionIndex += 1
             self.questionFactory?.requestNextQuestion() // используем ? при обращении к свойствам и методам опционального типа данных
         }
     }
     private func show(quiz result: QuizResultsViewModel) { // приватный метод показа результатов раунда квиза
-        let alert = UIAlertController( // создание алерта
+        let alert = UIAlertController( // создание самого алерта
             title: result.title,
             message: result.text,
             preferredStyle: .alert)
         
         let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-            guard let self = self else {return}
+            guard let self = self else { return }
             self.currentQuestionIndex = 0
             self.correctAnswers = 0
             questionFactory?.requestNextQuestion()
