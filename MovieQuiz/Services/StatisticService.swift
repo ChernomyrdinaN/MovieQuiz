@@ -7,9 +7,9 @@
 
 import Foundation
 
-final class StatisticService {
+final class StatisticService: StatisticServiceProtocol {
     
-    // MARK: ПЕРЕМЕННЫЕ
+    // MARK: - Properties
     private let storage: UserDefaults = .standard
     
     private enum Keys: String {
@@ -22,24 +22,16 @@ final class StatisticService {
     }
 }
 
-extension StatisticService: StatisticServiceProtocol {
+extension StatisticService {
     
     var gamesCount: Int { // количество сыграных квизов
-        get {
-            storage.integer(forKey: Keys.gamesCount.rawValue)
-        }
-        set {
-            storage.set(newValue, forKey: Keys.gamesCount.rawValue)
-        }
+        get { storage.integer(forKey: Keys.gamesCount.rawValue) }
+        set { storage.set(newValue, forKey: Keys.gamesCount.rawValue) }
     }
     
     var totalQuestionAmount: Int { // общее количество заданных вопросов за все время
-        get {
-            return storage.integer(forKey: Keys.totalQuestionAmount.rawValue)
-        }
-        set {
-            storage.set(newValue, forKey: Keys.totalQuestionAmount.rawValue)
-        }
+        get { return storage.integer(forKey: Keys.totalQuestionAmount.rawValue) }
+        set { storage.set(newValue, forKey: Keys.totalQuestionAmount.rawValue) }
     }
     
     var bestGame: GameResult { // рекорд, лучший результат игры
@@ -47,11 +39,7 @@ extension StatisticService: StatisticServiceProtocol {
             let correct = storage.integer(forKey: Keys.bestGamecorrect.rawValue)
             let total = storage.integer(forKey: Keys.bestGametotal.rawValue)
             let date = storage.object(forKey: Keys.bestGamedate.rawValue) as? Date ?? Date()
-            let gameResult = GameResult (
-                correct: correct,
-                total: total,
-                date: date)
-            return gameResult
+            return GameResult (correct: correct,total: total,date: date)
         }
         set {
             let currentGame = bestGame
@@ -64,12 +52,8 @@ extension StatisticService: StatisticServiceProtocol {
     }
     
     private var correctAnswers: Int { // общее количество правильных ответов за все время
-        get {
-            return storage.integer(forKey: Keys.correctAnswers.rawValue)
-        }
-        set {
-            storage.set(newValue, forKey: Keys.correctAnswers.rawValue)
-        }
+        get { return storage.integer(forKey: Keys.correctAnswers.rawValue) }
+        set { storage.set(newValue, forKey: Keys.correctAnswers.rawValue) }
     }
     
     var totalAccuracy: Double { // средняя точность прав/ответов за все время
@@ -82,7 +66,7 @@ extension StatisticService: StatisticServiceProtocol {
         return result
     }
     
-    // MARK: - МЕТОДЫ
+    // MARK: - Methods
     func store(correct count: Int, total amount: Int) { // метод сохранения текущего результата игры. Метод принимает количество правильных ответов и общее число заданных вопросов
         
         gamesCount += 1 // обновляем количество сыграных игр
@@ -90,11 +74,7 @@ extension StatisticService: StatisticServiceProtocol {
         correctAnswers += count // обновляем количество правильных ответов
         
         let current = bestGame // текущая игра для сравнения и выявления рекорда
-        let newValue: GameResult = GameResult(
-            correct: count,
-            total: amount,
-            date: Date()
-        )
+        let newValue: GameResult = GameResult(correct: count, total: amount, date: Date())
         
         if newValue.isBetterThan(current) {
             storage.set(newValue.correct, forKey: Keys.bestGamecorrect.rawValue)

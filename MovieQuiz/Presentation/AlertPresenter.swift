@@ -9,14 +9,14 @@ import UIKit
 
 final class AlertPresenter {
     
-    // MARK: ПЕРЕМЕННЫЕ
+    // MARK: - Properties
     private weak var alertController: UIViewController?
     
     init(alertController: UIViewController?) {
         self.alertController = alertController
     }
     
-    // MARK: - МЕТОДЫ
+    //MARK: - Methods
     func alertShow(model: AlertModel) {
         let alert = UIAlertController( // инициализация
             title: model.title,
@@ -25,7 +25,7 @@ final class AlertPresenter {
         
         let action = UIAlertAction(title: model.buttonText, style: .default) { [weak self] _ in
             guard self != nil else { return }
-            model.complition?()
+            model.completion?()
         }
         alert.addAction(action)
         alertController?.present(alert, animated: true, completion: nil)

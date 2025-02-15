@@ -2,7 +2,7 @@ import UIKit
 import Foundation
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ // класс подписываем на протокол делегата фабрики и алерта
-    // MARK: ПЕРЕМЕННЫЕ/АУТЛЕТЫ
+    // MARK: - IBOutlets
     @IBOutlet private weak var imageView: UIImageView!
     
     @IBOutlet private weak var textLabel: UILabel!
@@ -11,16 +11,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
     
-    // MARK: ПЕРЕМЕННЫЕ
+    // MARK: - Properties
     private var currentQuestionIndex = 0 // переменная с индексом текущего вопроса (начальная)
     private var correctAnswers = 0 // переменная со счетчиком правильных ответов (начальная)
     private let questionsAmount: Int = 10 // переменная-количество вопросов
     private var questionFactory: QuestionFactoryProtocol? // переменная-протокол от фабрики вопросов, с учетом DI
     private var currentQuestion: QuizQuestion? // переменная-вопрос показанный пользователю
     private var alertDialog: AlertPresenter? // созадаем экземпляр клааса AlertPresenter
-    private var statisticService: StatisticService? // создаем экземпляр класса StatisticService
+    private var statisticService: StatisticServiceProtocol? // создаем экземпляр класса StatisticService
     
-    // MARK: - МЕТОДЫ
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -32,7 +32,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
         
     }
     
-    // MARK: - МЕТОДЫ/делегат
+    // MARK: - Methods
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else { // если вопрос не придет работа метода прекратиться
             return
@@ -113,7 +113,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
             preferredStyle: .alert)
         
         let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-            guard let self = self else { return }
+            guard let self else { return }
             self.currentQuestionIndex = 0
             self.correctAnswers = 0
             questionFactory?.requestNextQuestion()
@@ -123,21 +123,27 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
         self.present(alert, animated: true, completion: nil)
     }
     
-    // MARK: ЭКШЕНЫ
+    private func changeStateButton(isEnabled: Bool){
+    yesButton.isEnabled  = isEnabled
+    noButton.isEnabled = isEnabled
+        
+    }
+    
+    // MARK: - IBActions
     // обработка нажатия кнопок Да/Het пользователем
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
             return
         }
         showAnswerResult(isCorrect: currentQuestion.correctAnswer == true)
-        yesButton.isEnabled = false
+        changeStateButton(isEnabled: false)
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         guard let currentQuestion = currentQuestion else {
             return
         }
         showAnswerResult(isCorrect: currentQuestion.correctAnswer == false)
-        noButton.isEnabled = false
+        changeStateButton(isEnabled: false)
     }
 }
 

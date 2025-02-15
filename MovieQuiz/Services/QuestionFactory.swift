@@ -7,9 +7,9 @@
 
 import Foundation
 
-class QuestionFactory: QuestionFactoryProtocol { // класс-сервис генерации новых вопросов
+final class QuestionFactory: QuestionFactoryProtocol { // класс-сервис генерации новых вопросов
     
-    // MARK: ПЕРЕМЕННЫЕ
+    // MARK: - Properties
     private let questions: [QuizQuestion] = [ // переменная-массив со списком вопросов
         QuizQuestion (
             image: "The Godfather",
@@ -67,7 +67,7 @@ class QuestionFactory: QuestionFactoryProtocol { // класс-сервис ге
         self.delegate = delegate
     }
     
-    // MARK: - МЕТОДЫ
+    // MARK: - Methods
     func requestNextQuestion () { // приватный метод показа следующего вопроса
         guard let index = (0..<questions.count).randomElement() else {
             delegate?.didReceiveNextQuestion(question: nil)
