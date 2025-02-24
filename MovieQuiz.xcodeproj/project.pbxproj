@@ -91,8 +91,8 @@
 		6113423A2B701CF8003FC2A4 /* Services */ = {
 			isa = PBXGroup;
 			children = (
-				6EC3496F2D4A5B10007F2B55 /* QuestionFactory.swift */,
 				6E3417622D4EC61F007FB89F /* QuestionFactoryProtocol.swift */,
+				6EC3496F2D4A5B10007F2B55 /* QuestionFactory.swift */,
 				6E3417642D4EC85F007FB89F /* QuestionFactoryDelegate.swift */,
 				6E3418B32D5A6B87007FB89F /* StatisticServiceProtocol.swift */,
 				6E3418B72D5A7560007FB89F /* StatisticService.swift */,

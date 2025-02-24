@@ -13,17 +13,15 @@ protocol MoviesLoading {
 
 struct MoviesLoader: MoviesLoading {
     private let networkClient = NetworkClient()
-    
-    // MARK: - URL
-        private var mostPopularMoviesUrl: URL {
-            // Если мы не смогли преобразовать строку в URL, то приложение упадёт с ошибкой
-            guard let url = URL(string: "https://tv-api.com/en/API/MostPopularTVs/k_zcuw1ytf") 
-                                else {
-                preconditionFailure("Unable to construct mostPopularMoviesUrl")
-            }
-            return url
+    private var mostPopularMoviesUrl: URL {
+        guard let url = URL(string: "https://tv-api.com/en/API/MostPopularTVs/k_zcuw1ytf") // распаковываем и проверяем URL
+        else {
+            preconditionFailure("Unable to construct mostPopularMoviesUrl")
         }
-    func loadMovies(handler: @escaping (Result<MostPopularMovies, Error>) -> Void) {
+        return url
+    }
+    
+    func loadMovies(handler: @escaping (Result<MostPopularMovies, Error>) -> Void) { // метод загрузки фильмов
         networkClient.fetch(url: mostPopularMoviesUrl) { result in
             switch result {
             case .success(let data):

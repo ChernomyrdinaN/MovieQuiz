@@ -1,7 +1,7 @@
 import UIKit
 import Foundation
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ // класс подписываем на протокол делегата фабрики и алерта
+final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
     // MARK: - IBOutlets
     @IBOutlet private weak var imageView: UIImageView!
     
@@ -22,7 +22,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
     private var alertDialog: AlertPresenter? // созадаем экземпляр клааса AlertPresenter
     private var statisticService: StatisticServiceProtocol? // создаем экземпляр класса StatisticService
     
-    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -33,9 +32,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
         alertDialog = AlertPresenter(alertController: self) // инициализация
         statisticService = StatisticService() // инициализация
         
-        
-        showLoadingIndicator()
-        questionFactory?.loadData()
+        showLoadingIndicator() // показ индикатора
+        questionFactory?.loadData() // запуск загрузки данных с сервера
     }
     
     // MARK: - Methods
@@ -48,8 +46,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
         DispatchQueue.main.async { [weak self] in //обновляем UI только с главной очереди
             self?.show(quiz: viewModel)}
     }
-
-    private func convert(model: QuizQuestion) -> QuizStepViewModel { //приватный метод конвертации, который возвращает вью
+    
+    private func convert(model: QuizQuestion) -> QuizStepViewModel { // приватный метод конвертации, который возвращает вью
         return QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(), // инициализация
             question: model.text,
@@ -76,10 +74,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
             imageView.layer.borderColor = UIColor.ypRed.cgColor
             dispatch()
         }
-        
     }
-    private func dispatch() { // приватный метод-диспетчеризации позволяет откладывать выолнение функции на 1 сек
-        DispatchQueue.main.asyncAfter (deadline: .now() + 1.0) { [weak self] in // используем слабую ссылку во избежании увеличения счетчика ссылок объекта
+    
+    private func dispatch() { // приватный метод-диспетчеризации позволяет откладывать выполнение функции на 1 сек
+        DispatchQueue.main.asyncAfter (deadline: .now() + 1.0) { [weak self] in
             guard let self else { return }
             self.showNextQuestionOrResults()
             self.imageView.layer.borderWidth = 0
@@ -95,11 +93,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
                 title: "Этот раунд окончен!",
                 message: "Ваш результат: \(correctAnswers)/\(questionsAmount)\n Количество сыграных квизов: \(statisticService?.gamesCount ?? 1) \n Рекорд: \(statisticService?.bestGame.correct ?? correctAnswers)/\(statisticService?.bestGame.total ?? questionsAmount) (\(statisticService?.bestGame.date.dateTimeString ?? Date().dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statisticService?.totalAccuracy ?? 0))%",
                 buttonText: "Сыграть еще раз!") { [weak self] in
-                guard let self else { return }
-                self.currentQuestionIndex = 0
-                self.correctAnswers = 0
-                self.questionFactory?.requestNextQuestion()
-            }
+                    guard let self else { return }
+                    self.currentQuestionIndex = 0
+                    self.correctAnswers = 0
+                    self.questionFactory?.requestNextQuestion()
+                }
             
             alertDialog?.alertShow(model: alert)
             
@@ -125,41 +123,44 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
         self.present(alert, animated: true, completion: nil)
     }
     
-    private func changeStateButton(isEnabled: Bool){
-    yesButton.isEnabled  = isEnabled
-    noButton.isEnabled = isEnabled
-        
+    private func changeStateButton(isEnabled: Bool){ // блокировка и разблокировка кнопок
+        yesButton.isEnabled  = isEnabled
+        noButton.isEnabled = isEnabled
     }
     
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+    func didFailToLoadData(with error: Error) { // реакция на ошибку загрузки
+        showNetworkError(message: error.localizedDescription) // метод показа сетевой ошибки
     }
     
-    func didLoadDataFromServer() {
-        activityIndicator.isHidden = true // скрываем индикатор загрузки
+    func didLoadDataFromServer() { // реакция на успешную загрузку
+        activityIndicator.isHidden = true // метод скрытия индикатора загрузки
         questionFactory?.requestNextQuestion()
     }
     
-    private func showLoadingIndicator() { // аргумента нет и данныен не возвращает
-        activityIndicator.isHidden = false // индикатор загрузки не скрыт
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false // метод загрузки индикатора
         activityIndicator.startAnimating() // запуск анимации
     }
     private func hideLoadingIndicator (){
-        activityIndicator.isHidden = true // индикатор загрузки скрыт
+        activityIndicator.isHidden = true // метод скрытия загрузки
         activityIndicator.stopAnimating() // стоп анимации
     }
-    private func showNetworkError(message: String) {
-        hideLoadingIndicator()
+    private func showNetworkError(message: String) { // метод показа алерта
+        hideLoadingIndicator() // скрываем индикатор загрузки
+        
         let alert = AlertModel(
-            title: "Ошибка  ",
+            title: "Ошибка",
             message: message,
             buttonText: "Попробовать еще раз!") { [weak self] in
                 guard let self else { return }
+                
                 self.currentQuestionIndex = 0
                 self.correctAnswers = 0
                 self.questionFactory?.requestNextQuestion()
+                self.questionFactory?.loadData() // попытка загрузки данных
             }
-        alertDialog?.alertShow(model: alert)
+        alertDialog?.alertShow(model: alert) // 
+        
     }
     // MARK: - IBActions
     // обработка нажатия кнопок Да/Het пользователем
