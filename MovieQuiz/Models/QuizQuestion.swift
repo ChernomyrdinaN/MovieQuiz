@@ -8,7 +8,7 @@
 import Foundation
 
 struct QuizQuestion { // структура вопроса
-    let image: String // название картинки афиши/фильма
+    let image: Data // название картинки афиши/фильма
     let text: String // вопрос
     let correctAnswer: Bool // правильный ответ на вопрос
 }

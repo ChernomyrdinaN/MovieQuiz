@@ -11,6 +11,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
     @IBOutlet private weak var noButton: UIButton!
     @IBOutlet private weak var yesButton: UIButton!
     
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
+    
     // MARK: - Properties
     private var currentQuestionIndex = 0 // переменная с индексом текущего вопроса (начальная)
     private var correctAnswers = 0 // переменная со счетчиком правильных ответов (начальная)
@@ -20,37 +22,38 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
     private var alertDialog: AlertPresenter? // созадаем экземпляр клааса AlertPresenter
     private var statisticService: StatisticServiceProtocol? // создаем экземпляр класса StatisticService
     
+    
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
         imageView.layer.cornerRadius = 20
-        questionFactory = QuestionFactory(delegate: self)
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.requestNextQuestion() // используем ? при обращении к свойствам и методам опционального типа данных
-        alertDialog = AlertPresenter(alertController: self) // инициализация 
-        statisticService = StatisticService() // инициализация 
+        alertDialog = AlertPresenter(alertController: self) // инициализация
+        statisticService = StatisticService() // инициализация
         
+        
+        showLoadingIndicator()
+        questionFactory?.loadData()
     }
     
     // MARK: - Methods
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else { // если вопрос не придет работа метода прекратиться
-            return
-        }
+            return }
         currentQuestion = question
         let viewModel = convert(model: question)
         
         DispatchQueue.main.async { [weak self] in //обновляем UI только с главной очереди
-            self?.show(quiz: viewModel)
-        }
+            self?.show(quiz: viewModel)}
     }
-    
-    private func convert(model: QuizQuestion) -> QuizStepViewModel { //приватный метод конвертации, который возвращает вью модель для главного экрана
-        let questionStep = QuizStepViewModel (
-            image: UIImage(named: model.image) ?? UIImage(), // инициализация
+
+    private func convert(model: QuizQuestion) -> QuizStepViewModel { //приватный метод конвертации, который возвращает вью
+        return QuizStepViewModel(
+            image: UIImage(data: model.image) ?? UIImage(), // инициализация
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-        return questionStep
     }
     
     private func show(quiz step: QuizStepViewModel) { // приватный метод вывода на экран вопроса, который принимает на вход вью модель
@@ -77,7 +80,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
     }
     private func dispatch() { // приватный метод-диспетчеризации позволяет откладывать выолнение функции на 1 сек
         DispatchQueue.main.asyncAfter (deadline: .now() + 1.0) { [weak self] in // используем слабую ссылку во избежании увеличения счетчика ссылок объекта
-            guard let self = self else { return }
+            guard let self else { return }
             self.showNextQuestionOrResults()
             self.imageView.layer.borderWidth = 0
             self.yesButton.isEnabled = true
@@ -91,9 +94,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
             let alert = AlertModel(
                 title: "Этот раунд окончен!",
                 message: "Ваш результат: \(correctAnswers)/\(questionsAmount)\n Количество сыграных квизов: \(statisticService?.gamesCount ?? 1) \n Рекорд: \(statisticService?.bestGame.correct ?? correctAnswers)/\(statisticService?.bestGame.total ?? questionsAmount) (\(statisticService?.bestGame.date.dateTimeString ?? Date().dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statisticService?.totalAccuracy ?? 0))%",
-                buttonText: "Сыграть еще раз!"
-            ) { [weak self] in
-                guard let self = self else { return }
+                buttonText: "Сыграть еще раз!") { [weak self] in
+                guard let self else { return }
                 self.currentQuestionIndex = 0
                 self.correctAnswers = 0
                 self.questionFactory?.requestNextQuestion()
@@ -129,6 +131,36 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
         
     }
     
+    func didFailToLoadData(with error: Error) {
+        showNetworkError(message: error.localizedDescription) // возьмём в качестве сообщения описание ошибки
+    }
+    
+    func didLoadDataFromServer() {
+        activityIndicator.isHidden = true // скрываем индикатор загрузки
+        questionFactory?.requestNextQuestion()
+    }
+    
+    private func showLoadingIndicator() { // аргумента нет и данныен не возвращает
+        activityIndicator.isHidden = false // индикатор загрузки не скрыт
+        activityIndicator.startAnimating() // запуск анимации
+    }
+    private func hideLoadingIndicator (){
+        activityIndicator.isHidden = true // индикатор загрузки скрыт
+        activityIndicator.stopAnimating() // стоп анимации
+    }
+    private func showNetworkError(message: String) {
+        hideLoadingIndicator()
+        let alert = AlertModel(
+            title: "Ошибка  ",
+            message: message,
+            buttonText: "Попробовать еще раз!") { [weak self] in
+                guard let self else { return }
+                self.currentQuestionIndex = 0
+                self.correctAnswers = 0
+                self.questionFactory?.requestNextQuestion()
+            }
+        alertDialog?.alertShow(model: alert)
+    }
     // MARK: - IBActions
     // обработка нажатия кнопок Да/Het пользователем
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
@@ -146,5 +178,3 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{ 
         changeStateButton(isEnabled: false)
     }
 }
-
-
