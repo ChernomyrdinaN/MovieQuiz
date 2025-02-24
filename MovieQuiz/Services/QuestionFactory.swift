@@ -13,7 +13,8 @@ final class QuestionFactory: QuestionFactoryProtocol { // класс-серви�
     
     init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate?) {
         self.moviesLoader = moviesLoader
-        self.delegate = delegate}
+        self.delegate = delegate
+    }
     
     var movies: [MostPopularMovie] = [] //будем складывать туда фильмы, загруженные с сервера
     
