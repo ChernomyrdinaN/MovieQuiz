@@ -25,7 +25,7 @@ struct NetworkClient { // отвечает за загрузку данных п
                 handler(.failure(NetworkError.codeError))
                 return
             }
-            guard let data else { return } // возвращаем данные
+            guard let data else {return handler(.failure(NetworkError.codeError))   } // возвращаем данные
             handler(.success(data))
         }
         
