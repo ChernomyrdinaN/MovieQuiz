@@ -8,7 +8,7 @@
 import Foundation
 
 struct NetworkClient { // отвечает за загрузку данных по URL
-    
+
     private enum NetworkError: Error { // реализация протокола Error для обработки ошибок
         case codeError
     }
@@ -28,7 +28,6 @@ struct NetworkClient { // отвечает за загрузку данных п
             guard let data else {return handler(.failure(NetworkError.codeError))   } // возвращаем данные
             handler(.success(data))
         }
-        
         task.resume() // продолжение выполнения task
     }
 }
