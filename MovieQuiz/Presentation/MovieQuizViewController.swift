@@ -48,10 +48,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
     }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel { // приватный метод конвертации, который возвращает вью
-        return QuizStepViewModel(
+        let questionStep = QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(), // инициализация
             question: model.text,
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
+        
+        return questionStep
     }
     
     private func show(quiz step: QuizStepViewModel) { // приватный метод вывода на экран вопроса, который принимает на вход вью модель
@@ -154,7 +156,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
                 
                 self.currentQuestionIndex = 0
                 self.correctAnswers = 0
-                self.questionFactory?.requestNextQuestion()
                 self.questionFactory?.loadData() // попытка загрузки данных
             }
         alertDialog?.alertShow(model: alert) // 
