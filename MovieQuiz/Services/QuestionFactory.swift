@@ -52,8 +52,7 @@ final class QuestionFactory: QuestionFactoryProtocol { // класс-серви�
             let question = QuizQuestion(image: imageData, text: text, correctAnswer: correctAnswer) // инициализируем модель
             
             DispatchQueue.main.async { [weak self] in // возвращаем в основную очередь для обновления
-                guard let self else { return }
-                self.delegate?.didReceiveNextQuestion(question: question) // получен ли вопрос
+                self?.delegate?.didReceiveNextQuestion(question: question) // получен ли вопрос
             }
         }
     }
