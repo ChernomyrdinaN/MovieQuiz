@@ -149,9 +149,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
         hideLoadingIndicator() // скрываем индикатор загрузки
         
         let alert = AlertModel(
-            title: "Ошибка",
-            message: message,
-            buttonText: "Попробовать еще раз!") { [weak self] in
+            title: "Что-то пошло не так(",
+            message: "Невозможно загрузить данные",
+            buttonText: "Попробовать еще раз") { [weak self] in
                 guard let self else { return }
                 
                 self.currentQuestionIndex = 0
