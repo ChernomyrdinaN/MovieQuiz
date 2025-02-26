@@ -21,7 +21,7 @@ final class QuestionFactory: QuestionFactoryProtocol { // класс-серви�
     func loadData() { // метод загрузки данных с сервера
         moviesLoader.loadMovies { [weak self] result in
             DispatchQueue.main.async {
-                guard let self = self else { return }
+                guard let self else { return }
                 switch result {
                 case .success(let mostPopularMovies):
                     self.movies = mostPopularMovies.items // сохраняем фильм в нашу новую переменную

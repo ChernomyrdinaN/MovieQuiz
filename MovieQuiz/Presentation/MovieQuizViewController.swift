@@ -46,6 +46,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
         DispatchQueue.main.async { [weak self] in //обновляем UI только с главной очереди
             self?.show(quiz: viewModel)}
     }
+    func didFailToLoadData(with error: Error) { // реакция на ошибку загрузки
+        showNetworkError(message: error.localizedDescription) // метод показа сетевой ошибки
+    }
+    
+    func didLoadDataFromServer() { // реакция на успешную загрузку
+        activityIndicator.stopAnimating() // метод скрытия индикатора загрузки
+        questionFactory?.requestNextQuestion()
+    }
     
     private func convert(model: QuizQuestion) -> QuizStepViewModel { // приватный метод конвертации, который возвращает вью
         let questionStep = QuizStepViewModel(
@@ -128,15 +136,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
     private func changeStateButton(isEnabled: Bool){ // блокировка и разблокировка кнопок
         yesButton.isEnabled  = isEnabled
         noButton.isEnabled = isEnabled
-    }
-    
-    func didFailToLoadData(with error: Error) { // реакция на ошибку загрузки
-        showNetworkError(message: error.localizedDescription) // метод показа сетевой ошибки
-    }
-    
-    func didLoadDataFromServer() { // реакция на успешную загрузку
-        activityIndicator.stopAnimating() // метод скрытия индикатора загрузки
-        questionFactory?.requestNextQuestion()
     }
     
     private func showLoadingIndicator() {
