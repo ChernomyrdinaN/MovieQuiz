@@ -16,10 +16,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - Properties
     private var correctAnswers = 0 // переменная со счетчиком правильных ответов (начальная)
     private let presenter = MovieQuizPresenter() // создаем экземпляр класса MovieQuizPresenter
-    private var questionFactory: QuestionFactoryProtocol? // переменная-протокол от фабрики вопросов, с учетом DI
+    var questionFactory: QuestionFactoryProtocol? // переменная-протокол от фабрики вопросов, с учетом DI
     //private var currentQuestion: QuizQuestion? // переменная-вопрос показанный пользователю
-    private var alertDialog: AlertPresenter? // создаем экземпляр клааса AlertPresenter
-    private var statisticService: StatisticServiceProtocol? // создаем экземпляр класса StatisticService
+    var alertDialog: AlertPresenter? // создаем экземпляр клааса AlertPresenter
+    var statisticService: StatisticServiceProtocol? // создаем экземпляр класса StatisticService
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -36,13 +36,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     // MARK: - Methods
     func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else { // если вопрос не придет работа метода прекратиться
-            return }
-        presenter.currentQuestion = question
-        let viewModel = presenter.convert(model: question)
-        
-        DispatchQueue.main.async { [weak self] in //обновляем UI только с главной очереди
-            self?.show(quiz: viewModel)}
+        presenter.didReceiveNextQuestion(question: question)
     }
     func didFailToLoadData(with error: Error) { // реакция на ошибку загрузки
         showNetworkError(message: error.localizedDescription) // метод показа сетевой ошибки
@@ -66,7 +60,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             dispatch()
         }
     }
-    private func show(quiz step: QuizStepViewModel) { // приватный метод вывода на экран вопроса, который принимает на вход вью модель
+    func show(quiz step: QuizStepViewModel) { // приватный метод вывода на экран вопроса, который принимает на вход вью модель
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
@@ -74,30 +68,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private func dispatch() { // приватный метод-диспетчеризации позволяет откладывать выполнение функции на 1 сек
         DispatchQueue.main.asyncAfter (deadline: .now() + 1.0) { [weak self] in
             guard let self else { return }
-            self.showNextQuestionOrResults()
+            presenter.showNextQuestionOrResults()
             self.imageView.layer.borderWidth = 0
             self.yesButton.isEnabled = true
             self.noButton.isEnabled = true
-        }
-    }
-    private func showNextQuestionOrResults () { // приватный метод перехода в один из сценариев
-        if presenter.isLastQuestion() { // переход в "Результат квиза"
-            let alert = AlertModel(
-                title: "Этот раунд окончен!",
-                message: "Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)\n Количество сыграных квизов: \(statisticService?.gamesCount ?? 1) \n Рекорд: \(statisticService?.bestGame.correct ?? correctAnswers)/\(statisticService?.bestGame.total ?? presenter.questionsAmount) (\(statisticService?.bestGame.date.dateTimeString ?? Date().dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statisticService?.totalAccuracy ?? 0))%",
-                buttonText: "Сыграть еще раз!") { [weak self] in
-                    guard let self else { return }
-                    
-                    self.correctAnswers = 0
-                    self.presenter.resetQuestionIndex()
-                    self.questionFactory?.requestNextQuestion()
-                }
-            
-            alertDialog?.alertShow(model: alert)
-            
-        } else { // переход в "Вопрос показан"
-            presenter.switchToNextQuestion()
-            self.questionFactory?.requestNextQuestion() // используем ? при обращении к свойствам и методам опционального типа данных
         }
     }
     private func show(quiz result: QuizResultsViewModel) { // приватный метод показа результатов раунда квиза
@@ -145,11 +119,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - IBActions
     // обработка нажатия кнопок Да/Het пользователем
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        showAnswerResult(isCorrect: presenter.currentQuestion?.correctAnswer == true)
+        presenter.yesButtonClicked()
         changeStateButton(isEnabled: false)
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        showAnswerResult(isCorrect: presenter.currentQuestion?.correctAnswer == false)
+        presenter.noButtonClicked()
         changeStateButton(isEnabled: false)
     }
 }
