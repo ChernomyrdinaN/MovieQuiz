@@ -1,7 +1,7 @@
 import UIKit
 import Foundation
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
+final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - IBOutlets
     @IBOutlet private weak var imageView: UIImageView!
     
@@ -14,12 +14,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
     // MARK: - Properties
-    private var currentQuestionIndex = 0 // переменная с индексом текущего вопроса (начальная)
     private var correctAnswers = 0 // переменная со счетчиком правильных ответов (начальная)
-    private let questionsAmount: Int = 10 // переменная-количество вопросов
+    private let presenter = MovieQuizPresenter() // создаем экземпляр класса MovieQuizPresenter
     private var questionFactory: QuestionFactoryProtocol? // переменная-протокол от фабрики вопросов, с учетом DI
     private var currentQuestion: QuizQuestion? // переменная-вопрос показанный пользователю
-    private var alertDialog: AlertPresenter? // созадаем экземпляр клааса AlertPresenter
+    private var alertDialog: AlertPresenter? // создаем экземпляр клааса AlertPresenter
     private var statisticService: StatisticServiceProtocol? // создаем экземпляр класса StatisticService
     
     // MARK: - Lifecycle
@@ -41,7 +40,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
         guard let question = question else { // если вопрос не придет работа метода прекратиться
             return }
         currentQuestion = question
-        let viewModel = convert(model: question)
+        let viewModel = presenter.convert(model: question)
         
         DispatchQueue.main.async { [weak self] in //обновляем UI только с главной очереди
             self?.show(quiz: viewModel)}
@@ -49,19 +48,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
     func didFailToLoadData(with error: Error) { // реакция на ошибку загрузки
         showNetworkError(message: error.localizedDescription) // метод показа сетевой ошибки
     }
-    
     func didLoadDataFromServer() { // реакция на успешную загрузку
         activityIndicator.stopAnimating() // метод скрытия индикатора загрузки
         questionFactory?.requestNextQuestion()
-    }
-    
-    private func convert(model: QuizQuestion) -> QuizStepViewModel { // приватный метод конвертации, который возвращает вью
-        let questionStep = QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(), // инициализация
-            question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-        
-        return questionStep
     }
     
     private func show(quiz step: QuizStepViewModel) { // приватный метод вывода на экран вопроса, который принимает на вход вью модель
@@ -69,7 +58,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
     }
-    
     private func showAnswerResult (isCorrect: Bool) { // приватный метод отображения результата ответов
         if isCorrect {
             correctAnswers += 1
@@ -85,7 +73,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
             dispatch()
         }
     }
-    
     private func dispatch() { // приватный метод-диспетчеризации позволяет откладывать выполнение функции на 1 сек
         DispatchQueue.main.asyncAfter (deadline: .now() + 1.0) { [weak self] in
             guard let self else { return }
@@ -95,53 +82,49 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
             self.noButton.isEnabled = true
         }
     }
-    
     private func showNextQuestionOrResults () { // приватный метод перехода в один из сценариев
-        if currentQuestionIndex == questionsAmount - 1 { // переход в "Результат квиза"
-            statisticService?.store(correct: correctAnswers, total: questionsAmount)
+        if presenter.isLastQuestion() { // переход в "Результат квиза"
             let alert = AlertModel(
                 title: "Этот раунд окончен!",
-                message: "Ваш результат: \(correctAnswers)/\(questionsAmount)\n Количество сыграных квизов: \(statisticService?.gamesCount ?? 1) \n Рекорд: \(statisticService?.bestGame.correct ?? correctAnswers)/\(statisticService?.bestGame.total ?? questionsAmount) (\(statisticService?.bestGame.date.dateTimeString ?? Date().dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statisticService?.totalAccuracy ?? 0))%",
+                message: "Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)\n Количество сыграных квизов: \(statisticService?.gamesCount ?? 1) \n Рекорд: \(statisticService?.bestGame.correct ?? correctAnswers)/\(statisticService?.bestGame.total ?? presenter.questionsAmount) (\(statisticService?.bestGame.date.dateTimeString ?? Date().dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statisticService?.totalAccuracy ?? 0))%",
                 buttonText: "Сыграть еще раз!") { [weak self] in
                     guard let self else { return }
-                    self.currentQuestionIndex = 0
+                    
                     self.correctAnswers = 0
+                    self.presenter.resetQuestionIndex()
                     self.questionFactory?.requestNextQuestion()
                 }
             
             alertDialog?.alertShow(model: alert)
             
         } else { // переход в "Вопрос показан"
-            currentQuestionIndex += 1
+            presenter.switchToNextQuestion()
             self.questionFactory?.requestNextQuestion() // используем ? при обращении к свойствам и методам опционального типа данных
         }
     }
     private func show(quiz result: QuizResultsViewModel) { // приватный метод показа результатов раунда квиза
+        statisticService?.store(correct: correctAnswers, total: presenter.questionsAmount)
+        
         let alert = UIAlertController( // создание самого алерта
             title: result.title,
             message: result.text,
             preferredStyle: .alert)
         
         let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-            guard let self else { return }
-            self.currentQuestionIndex = 0
-            self.correctAnswers = 0
-            questionFactory?.requestNextQuestion()
+            guard self != nil else { return }
         }
-        
         alert.addAction(action) // добавление кнопки в алерт
         self.present(alert, animated: true, completion: nil)
+        self.presenter.resetQuestionIndex()
     }
-    
-    private func changeStateButton(isEnabled: Bool){ // блокировка и разблокировка кнопок
+    private func changeStateButton(isEnabled: Bool) { // блокировка и разблокировка кнопок
         yesButton.isEnabled  = isEnabled
         noButton.isEnabled = isEnabled
     }
-    
     private func showLoadingIndicator() {
         activityIndicator.startAnimating() // запуск анимации
     }
-    private func hideLoadingIndicator (){
+    private func hideLoadingIndicator() {
         activityIndicator.stopAnimating() // стоп анимации
     }
     private func showNetworkError(message: String) { // метод показа алерта
@@ -153,13 +136,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate{
             buttonText: "Попробовать еще раз") { [weak self] in
                 guard let self else { return }
                 
-                self.currentQuestionIndex = 0
+                self.presenter.resetQuestionIndex()
                 self.correctAnswers = 0
                 self.questionFactory?.loadData() // попытка загрузки данных
             }
-        alertDialog?.alertShow(model: alert) // 
+        alertDialog?.alertShow(model: alert) //
         
     }
+    
     // MARK: - IBActions
     // обработка нажатия кнопок Да/Het пользователем
     @IBAction private func yesButtonClicked(_ sender: UIButton) {

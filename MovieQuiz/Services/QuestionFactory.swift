@@ -10,12 +10,10 @@ import Foundation
 final class QuestionFactory: QuestionFactoryProtocol { // класс-сервис генерации новых вопросов
     private let moviesLoader: MoviesLoading
     private weak var delegate: QuestionFactoryDelegate?
-    
     init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate?) {
         self.moviesLoader = moviesLoader
         self.delegate = delegate
     }
-    
     private var movies: [MostPopularMovie] = [] //будем складывать туда фильмы, загруженные с сервера
     
     func loadData() { // метод загрузки данных с сервера
@@ -32,7 +30,6 @@ final class QuestionFactory: QuestionFactoryProtocol { // класс-серви�
             }
         }
     }
-    
     func requestNextQuestion() { // метод запроса следующего вопроса
         DispatchQueue.global().async { [weak self] in // отправляем в фоновую очередь
             guard let self else { return }
@@ -56,7 +53,6 @@ final class QuestionFactory: QuestionFactoryProtocol { // класс-серви�
             }
         }
     }
-    
 }
 // мок-данные
 /*
