@@ -17,20 +17,19 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var correctAnswers = 0 // переменная со счетчиком правильных ответов (начальная)
     private let presenter = MovieQuizPresenter() // создаем экземпляр класса MovieQuizPresenter
     private var questionFactory: QuestionFactoryProtocol? // переменная-протокол от фабрики вопросов, с учетом DI
-    private var currentQuestion: QuizQuestion? // переменная-вопрос показанный пользователю
+    //private var currentQuestion: QuizQuestion? // переменная-вопрос показанный пользователю
     private var alertDialog: AlertPresenter? // создаем экземпляр клааса AlertPresenter
     private var statisticService: StatisticServiceProtocol? // создаем экземпляр класса StatisticService
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        presenter.viewController = self
         imageView.layer.cornerRadius = 20
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.requestNextQuestion() // используем ? при обращении к свойствам и методам опционального типа данных
         alertDialog = AlertPresenter(alertController: self) // инициализация
         statisticService = StatisticService() // инициализация
-        
         showLoadingIndicator() // показ индикатора
         questionFactory?.loadData() // запуск загрузки данных с сервера
     }
@@ -39,7 +38,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else { // если вопрос не придет работа метода прекратиться
             return }
-        currentQuestion = question
+        presenter.currentQuestion = question
         let viewModel = presenter.convert(model: question)
         
         DispatchQueue.main.async { [weak self] in //обновляем UI только с главной очереди
@@ -52,13 +51,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         activityIndicator.stopAnimating() // метод скрытия индикатора загрузки
         questionFactory?.requestNextQuestion()
     }
-    
-    private func show(quiz step: QuizStepViewModel) { // приватный метод вывода на экран вопроса, который принимает на вход вью модель
-        imageView.image = step.image
-        textLabel.text = step.question
-        counterLabel.text = step.questionNumber
-    }
-    private func showAnswerResult (isCorrect: Bool) { // приватный метод отображения результата ответов
+    func showAnswerResult (isCorrect: Bool) { // приватный метод отображения результата ответов
         if isCorrect {
             correctAnswers += 1
         }
@@ -72,6 +65,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             imageView.layer.borderColor = UIColor.ypRed.cgColor
             dispatch()
         }
+    }
+    private func show(quiz step: QuizStepViewModel) { // приватный метод вывода на экран вопроса, который принимает на вход вью модель
+        imageView.image = step.image
+        textLabel.text = step.question
+        counterLabel.text = step.questionNumber
     }
     private func dispatch() { // приватный метод-диспетчеризации позволяет откладывать выполнение функции на 1 сек
         DispatchQueue.main.asyncAfter (deadline: .now() + 1.0) { [weak self] in
@@ -147,17 +145,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - IBActions
     // обработка нажатия кнопок Да/Het пользователем
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        showAnswerResult(isCorrect: currentQuestion.correctAnswer == true)
+        showAnswerResult(isCorrect: presenter.currentQuestion?.correctAnswer == true)
         changeStateButton(isEnabled: false)
     }
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        guard let currentQuestion = currentQuestion else {
-            return
-        }
-        showAnswerResult(isCorrect: currentQuestion.correctAnswer == false)
+        showAnswerResult(isCorrect: presenter.currentQuestion?.correctAnswer == false)
         changeStateButton(isEnabled: false)
     }
 }
+
