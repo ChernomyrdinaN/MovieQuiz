@@ -27,6 +27,7 @@ final class AlertPresenter {
             model.completion?()
         }
         alert.addAction(action)
+        alert.view.accessibilityIdentifier = "universalAlert"
         alertController?.present(alert, animated: true, completion: nil)
     }
 }
