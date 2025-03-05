@@ -11,6 +11,7 @@ final class AlertPresenter {
     
     // MARK: - Properties
     private weak var alertController: UIViewController?
+    
     init(alertController: UIViewController?) {
         self.alertController = alertController
     }

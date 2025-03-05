@@ -22,27 +22,19 @@ final class MovieQuizViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         presenter = MovieQuizPresenter(viewController: self)
-
         presenter.viewController = self
         imageView.layer.cornerRadius = 20
-        //questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-        //questionFactory?.requestNextQuestion() // используем ? при обращении к свойствам и методам опционального типа данных
+        statisticService = StatisticService()
         alertDialog = AlertPresenter(alertController: self) // инициализация
-        //statisticService = StatisticService() // инициализация
         showLoadingIndicator() // показ индикатора
-        //questionFactory?.loadData() // запуск загрузки данных с сервера
     }
     
     // MARK: - Methods
-    func show(quiz step: QuizStepViewModel) {
-        imageView.image = step.image
-        textLabel.text = step.question
-        counterLabel.text = step.questionNumber
-    } // показ сконверитированной модели вопроса
     
     func showLoadingIndicator() {
         activityIndicator.startAnimating() // запуск анимации
     } // показ индикатора загрузки
+   
     func hideLoadingIndicator() {
         activityIndicator.stopAnimating() // стоп анимации
     } // скрытие индикатора загрузки
@@ -60,10 +52,27 @@ final class MovieQuizViewController: UIViewController {
         alertDialog?.alertShow(model: alert) //
         
     } // показ сетевой ошибки
+    
+    func show(quiz step: QuizStepViewModel) {
+        imageView.image = step.image
+        textLabel.text = step.question
+        counterLabel.text = step.questionNumber
+    } // показ сконверитированной модели вопроса
+    
+    func highlightImageBorder(isCorrectAnswer: Bool) {
+           imageView.layer.masksToBounds = true
+           imageView.layer.borderWidth = 8
+           imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
+       } // рамка
+    
     func hideBorder() {
         self.imageView.layer.borderWidth = 0
-    }
+    } // скрытие рамки
     
+    func changeStateButton(isEnabled: Bool) {
+        yesButton.isEnabled  = isEnabled
+        noButton.isEnabled = isEnabled
+    } // изменение состояния кнопок: блокировка и разблокировка
     
     private func show(quiz result: QuizResultsViewModel) {
         statisticService?.store(correct: presenter.correctAnswers, total: presenter.questionsAmount)
@@ -79,16 +88,7 @@ final class MovieQuizViewController: UIViewController {
         self.present(alert, animated: true, completion: nil)
         self.presenter.restartGame()
     } // показ результатов раунда квиза
-    func changeStateButton(isEnabled: Bool) {
-        yesButton.isEnabled  = isEnabled
-        noButton.isEnabled = isEnabled
-    } // изменение состояния кнопок: блокировка и разблокировка
     
-    func highlightImageBorder(isCorrectAnswer: Bool) {
-           imageView.layer.masksToBounds = true
-           imageView.layer.borderWidth = 8
-           imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
-       }
     // MARK: - IBActions
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {

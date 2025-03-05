@@ -51,11 +51,6 @@ extension StatisticService {
         }
     }
     
-    private var correctAnswers: Int { // общее количество правильных ответов за все время
-        get { return storage.integer(forKey: Keys.correctAnswers.rawValue) }
-        set { storage.set(newValue, forKey: Keys.correctAnswers.rawValue) }
-    }
-    
     var totalAccuracy: Double { // средняя точность прав/ответов за все время
         
         guard gamesCount > 0 else { // проверим знаменатель на ноль
@@ -65,6 +60,12 @@ extension StatisticService {
         let result: Double = Double(correctAnswers) / (Double(gamesCount) * 10) * 100 // формула рассчета средней точности
         return result
     }
+    
+    private var correctAnswers: Int { // общее количество правильных ответов за все время
+        get { return storage.integer(forKey: Keys.correctAnswers.rawValue) }
+        set { storage.set(newValue, forKey: Keys.correctAnswers.rawValue) }
+    }
+    
     
     // MARK: - Methods
     func store(correct count: Int, total amount: Int) { // метод сохранения текущего результата игры. Метод принимает количество правильных ответов и общее число заданных вопросов

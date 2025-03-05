@@ -8,13 +8,14 @@
 import Foundation
 
 final class QuestionFactory: QuestionFactoryProtocol { // класс-сервис генерации новых вопросов
-    private let moviesLoader: MoviesLoading
     weak var delegate: QuestionFactoryDelegate?
+    private let moviesLoader: MoviesLoading
+    private var movies: [MostPopularMovie] = [] //будем складывать туда фильмы, загруженные с сервера
+    
     init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate) {
         self.moviesLoader = moviesLoader
         self.delegate = delegate
-    }   
-    private var movies: [MostPopularMovie] = [] //будем складывать туда фильмы, загруженные с сервера
+    }
     
     func loadData() { // метод загрузки данных с сервера
         moviesLoader.loadMovies { [weak self] result in
@@ -37,20 +38,17 @@ final class QuestionFactory: QuestionFactoryProtocol { // класс-серви�
             let index = (0..<self.movies.count).randomElement() ?? 0
             guard let movie = self.movies[safe: index] else { return }
             var imageData = Data()
-            
             do {
                 imageData = try Data(contentsOf: movie.imageURL)
             } catch {
                 print("Failed to load image")
             }
-            
             let rating = Float(movie.rating) ?? 0
             let text = "Рейтинг этого фильма больше чем 7?"
             let correctAnswer = rating > 7
             let question = QuizQuestion(image: imageData, text: text, correctAnswer: correctAnswer) // инициализируем модель
-            
             DispatchQueue.main.async { [weak self] in // возвращаем в основную очередь для обновления
-            self?.delegate?.didReceiveNextQuestion(question: question) // получен ли вопрос
+                self?.delegate?.didReceiveNextQuestion(question: question) // получен ли вопрос
             }
         }
     }
