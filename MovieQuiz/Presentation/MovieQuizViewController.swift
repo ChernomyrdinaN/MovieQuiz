@@ -20,6 +20,10 @@ final class MovieQuizViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        counterLabel.font = UIFont(name: "YSDisplay-Medium", size: 20)
+        textLabel.font = UIFont(name: "YSDisplay-Bold", size: 23)
+        
         presenter = MovieQuizPresenter(viewController: self)
         presenter.viewController = self
         imageView.layer.cornerRadius = 20
