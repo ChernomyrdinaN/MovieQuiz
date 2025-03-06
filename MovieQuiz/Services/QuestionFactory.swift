@@ -10,14 +10,15 @@ import Foundation
 final class QuestionFactory: QuestionFactoryProtocol { // класс-сервис генерации новых вопросов
     weak var delegate: QuestionFactoryDelegate?
     private let moviesLoader: MoviesLoading
-    private var movies: [MostPopularMovie] = [] //будем складывать туда фильмы, загруженные с сервера
+    private var movies: [MostPopularMovie] = []
     
     init(moviesLoader: MoviesLoading, delegate: QuestionFactoryDelegate) {
         self.moviesLoader = moviesLoader
         self.delegate = delegate
     }
     
-    func loadData() { // метод загрузки данных с сервера
+    // метод загрузки данных с сервера
+    func loadData() {
         moviesLoader.loadMovies { [weak self] result in
             DispatchQueue.main.async {
                 guard let self else { return }
@@ -26,13 +27,14 @@ final class QuestionFactory: QuestionFactoryProtocol { // класс-серви�
                     self.movies = mostPopularMovies.items // сохраняем фильм в нашу новую переменную
                     self.delegate?.didLoadDataFromServer() // сообщаем что данные загрузились
                 case .failure(let error):
-                    self.delegate?.didFailToLoadData(with: error) // сообщаем об ошибке нашему MovieQuizViewController
+                    self.delegate?.didFailToLoadData(with: error) // сообщаем об ошибке MovieQuizViewController
                 }
             }
         }
     }
     
-    func requestNextQuestion() { // метод запроса следующего вопроса
+    // метод запроса следующего вопроса
+    func requestNextQuestion() {
         DispatchQueue.global().async { [weak self] in // отправляем в фоновую очередь
             guard let self else { return }
             let index = (0..<self.movies.count).randomElement() ?? 0

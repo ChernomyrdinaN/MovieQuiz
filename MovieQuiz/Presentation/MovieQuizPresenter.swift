@@ -8,13 +8,14 @@
 import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
-    let questionsAmount: Int = 10
-    var correctAnswers: Int = 0
-    var currentQuestion: QuizQuestion?
-    weak var viewController: MovieQuizViewController?
+    private var currentQuestion: QuizQuestion?
+    private let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
-    private var questionFactory: QuestionFactoryProtocol?
+    private var correctAnswers: Int = 0
     private let statisticService: StatisticServiceProtocol!
+    private var questionFactory: QuestionFactoryProtocol?
+    weak var viewController: MovieQuizViewController?
+    
     
     init(viewController: MovieQuizViewController) {
         self.viewController = viewController
@@ -22,58 +23,84 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
         questionFactory?.loadData()
         viewController.showLoadingIndicator()
-        
     }
     
-    func convert(model: QuizQuestion) -> QuizStepViewModel { // метод преобразованиея из Модели (QuizQuestion) в Представление QuizStepViewModel)
-        QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(),
-            question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)" // ОШИБКА: `currentQuestionIndex` и `questionsAmount` неопределены
-        )
-    } // метод конвертации модели
-   
+    // загрузка данных с сервера
     func didLoadDataFromServer() {
         viewController?.hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
-    } // загрузка данных с сервера
+    }
     
+    // данные не загружены
     func didFailToLoadData(with error: Error) {
         let message = error.localizedDescription
         viewController?.showNetworkError(message: message)
-    } // данные не загружены
+    }
     
+    // получение следующего вопроса
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question else { // если вопрос не придет работа метода прекратиться
             return }
+        
         currentQuestion = question
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in //обновляем UI только с главной очереди
             self?.viewController?.show(quiz: viewModel)
         }
-    } // получение следующего вопроса
+    }
     
+    // показ последнего вопроса
+    func isLastQuestion() -> Bool {
+        currentQuestionIndex == questionsAmount - 1
+    }
+    
+    // перезапуск игры
+    func restartGame() {
+        currentQuestionIndex = 0
+        correctAnswers = 0
+        questionFactory?.requestNextQuestion()
+    }
+    
+    // переход к следующему вопросу
+    func switchToNextQuestion() {
+        currentQuestionIndex += 1
+    }
+    
+    // метод конвертации модели
+    func convert(model: QuizQuestion) -> QuizStepViewModel {
+        QuizStepViewModel(
+            image: UIImage(data: model.image) ?? UIImage(),
+            question: model.text,
+            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)"
+        )
+    }
+    
+    // нажатие кнопки "Да"
     func yesButtonClicked() {
         didAnswer(isYes: true)
-    } // нажатие кнопки "Да"
+    }
     
+    // нажатие кнопки "Нет"
     func noButtonClicked() {
         didAnswer(isYes: false)
-    } // нажатие кнопки "Нет"
+    }
     
-    func didAnswer(isYes: Bool) {
+    // получен ответ пользователя
+    private func didAnswer(isYes: Bool) {
         guard let currentQuestion else {
             return
         }
         let givenAnswer = isYes // ответ пользователя Да/Нет
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
-    } // получен ответ
+    }
     
-    func showNextQuestionOrResults() { // приватный метод перехода в один из сценариев
+    // показ следующего вопроса или результат игры
+    private func showNextQuestionOrResults() {
+        statisticService?.store(correct: correctAnswers, total: questionsAmount)
         if self.isLastQuestion() { // переход в "Результат квиза"
             let alert = AlertModel(
                 title: "Этот раунд окончен!",
-                message: "Ваш результат: \(self.correctAnswers)/\(self.questionsAmount)\n Количество сыграных квизов: \(viewController?.statisticService?.gamesCount ?? 1) \n Рекорд: \(viewController?.statisticService?.bestGame.correct ?? self.correctAnswers)/\(viewController?.statisticService?.bestGame.total ?? self.questionsAmount) (\(viewController?.statisticService?.bestGame.date.dateTimeString ?? Date().dateTimeString)) \n Средняя точность: \(String(format: "%.2f", viewController?.statisticService?.totalAccuracy ?? 0))%",
+                message: "Ваш результат: \(self.correctAnswers)/\(self.questionsAmount)\n Количество сыграных квизов: \(statisticService?.gamesCount ?? 1) \n Рекорд: \(statisticService?.bestGame.correct ?? self.correctAnswers)/\(statisticService?.bestGame.total ?? self.questionsAmount) (\(statisticService?.bestGame.date.dateTimeString ?? Date().dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statisticService?.totalAccuracy ?? 0))%",
                 buttonText: "Сыграть еще раз!") { [weak self] in
                     guard let self else { return }
                     self.restartGame()
@@ -82,15 +109,12 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         }
         else { // переход в "Вопрос показан"
             self.switchToNextQuestion()
-            self.questionFactory?.requestNextQuestion() // используем ? при обращении к свойствам и методам опционального типа данных
+            self.questionFactory?.requestNextQuestion()
         }
-    } // показ следующего вопроса или результат игры
+    }
     
-    func switchToNextQuestion() {
-        currentQuestionIndex += 1
-    } // переход к следующему вопросу
-    
-    func showAnswerResult(isCorrect: Bool) { // показ результата ответа
+    // показ результата ответа
+    private func showAnswerResult(isCorrect: Bool) { // показ результата ответа
         //imageView.layer.masksToBounds = true
         if isCorrect {
             viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
@@ -99,18 +123,9 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
         }
         dispatch()
-    } // показ результата ответа
+    }
     
-    func isLastQuestion() -> Bool {
-        currentQuestionIndex == questionsAmount - 1
-    } // показ последнего вопроса
-    
-    func restartGame() {
-        currentQuestionIndex = 0
-        correctAnswers = 0
-        questionFactory?.requestNextQuestion()
-    } // перезапуск игры
-    
+    // метод асинхронной отправки
     private func dispatch() { // приватный метод-диспетчеризации позволяет откладывать выполнение функции на 1 сек
         DispatchQueue.main.asyncAfter (deadline: .now() + 1.0) { [weak self] in
             guard let self else { return }
@@ -118,7 +133,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             viewController?.hideBorder()
             viewController?.changeStateButton(isEnabled: true)
         }
-    } // отправка
+    }
 }
 
 

@@ -56,7 +56,6 @@ extension StatisticService {
         guard gamesCount > 0 else { // проверим знаменатель на ноль
             return 0.0
         }
-        
         let result: Double = Double(correctAnswers) / (Double(gamesCount) * 10) * 100 // формула рассчета средней точности
         return result
     }

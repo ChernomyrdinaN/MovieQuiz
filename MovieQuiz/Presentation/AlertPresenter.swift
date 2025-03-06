@@ -17,8 +17,9 @@ final class AlertPresenter {
     }
     
     //MARK: - Methods
+    // показ алерта
     func alertShow(model: AlertModel) {
-        let alert = UIAlertController( // инициализация
+        let alert = UIAlertController(
             title: model.title,
             message: model.message,
             preferredStyle: .alert)
