@@ -14,10 +14,10 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private var correctAnswers: Int = 0
     private let statisticService: StatisticServiceProtocol!
     private var questionFactory: QuestionFactoryProtocol?
-    weak var viewController: MovieQuizViewController?
+    weak var viewController: MovieQuizViewControllerProtocol?
     
     
-    init(viewController: MovieQuizViewController) {
+    init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         statisticService = StatisticService()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
@@ -101,7 +101,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             let alert = AlertModel(
                 title: "Этот раунд окончен!",
                 message: "Ваш результат: \(self.correctAnswers)/\(self.questionsAmount)\n Количество сыграных квизов: \(statisticService?.gamesCount ?? 1) \n Рекорд: \(statisticService?.bestGame.correct ?? self.correctAnswers)/\(statisticService?.bestGame.total ?? self.questionsAmount) (\(statisticService?.bestGame.date.dateTimeString ?? Date().dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statisticService?.totalAccuracy ?? 0))%",
-                buttonText: "Сыграть еще раз!") { [weak self] in
+                buttonText: "Сыграть еще раз") { [weak self] in
                     guard let self else { return }
                     self.restartGame()
                 }

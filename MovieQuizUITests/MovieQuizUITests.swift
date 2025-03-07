@@ -29,19 +29,23 @@ final class MovieQuizUITests: XCTestCase {
     }
     
     func testYesButton() throws {
-        sleep(3) // в зависимости от соединения с сервером можно увеличить время ожидания
-        
+       // sleep(3) // в зависимости от соединения с сервером можно увеличить время ожидания
+        let expectation = self.expectation(description: "Loading expectation") // expectation альтернатива sleep
         let firstPoster = app.images["Poster"]
         let firstPosterData = firstPoster.screenshot().pngRepresentation //возвращает нам скриншот в виде данных (тип Data)
+        let indexLabel = app.staticTexts["Index"] // лейбл можно получить из объекта XCUIApplication
+        XCTAssertEqual(indexLabel.label, "1/10")
         
         app.buttons["Yes"].tap()
-        sleep(3)
+        //sleep(3)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { //ожидание пока второй постер не появится
+            expectation.fulfill() // условие выполнено
+        }
+        waitForExpectations(timeout: 3, handler: nil) // ожидание выполнения ожидания
         
         let secondPoster = app.images["Poster"]
         let secondPosterData = secondPoster.screenshot().pngRepresentation
         XCTAssertNotEqual(firstPosterData, secondPosterData) // контенты картинок не должны быть равны
-        
-        let indexLabel = app.staticTexts["Index"] // лейбл можно получить из объекта XCUIApplication
         XCTAssertEqual(indexLabel.label, "2/10")
         
     }
@@ -52,6 +56,8 @@ final class MovieQuizUITests: XCTestCase {
         
         let firstPoster = app.images["Poster"]
         let firstPosterData = firstPoster.screenshot().pngRepresentation
+        let indexLabel = app.staticTexts["Index"]
+        XCTAssertEqual(indexLabel.label, "1/10")
         
         app.buttons["No"].tap()
         //sleep(3)
@@ -63,8 +69,6 @@ final class MovieQuizUITests: XCTestCase {
         let secondPoster = app.images["Poster"]
         let secondPosterData = secondPoster.screenshot().pngRepresentation
         XCTAssertFalse (firstPosterData == secondPosterData)
-        
-        let indexLabel = app.staticTexts["Index"]
         XCTAssertEqual(indexLabel.label, "2/10")
     }
     
@@ -79,7 +83,7 @@ final class MovieQuizUITests: XCTestCase {
         
         XCTAssertTrue(alert.exists) // проверка существования алерта - существует
         XCTAssertEqual(alert.label, "Этот раунд окончен!")
-        XCTAssertEqual(alert.buttons.firstMatch.label, "Сыграть еще раз!")
+        XCTAssertEqual(alert.buttons.firstMatch.label, "Сыграть еще раз")
     }
     
     func testAlertDissmis() {
