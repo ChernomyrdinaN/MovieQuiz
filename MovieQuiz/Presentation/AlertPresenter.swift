@@ -17,16 +17,20 @@ final class AlertPresenter {
     }
     
     //MARK: - Methods
+    // показ алерта
     func alertShow(model: AlertModel) {
-        let alert = UIAlertController( // инициализация
+        let alert = UIAlertController(
             title: model.title,
             message: model.message,
             preferredStyle: .alert)
         let action = UIAlertAction(title: model.buttonText, style: .default) { [weak self] _ in
-            guard self != nil else { return }
+            guard self != nil else {
+                return
+            }
             model.completion?()
         }
         alert.addAction(action)
+        alert.view.accessibilityIdentifier = "universalAlert"
         alertController?.present(alert, animated: true, completion: nil)
     }
 }

@@ -7,12 +7,17 @@
 
 import Foundation
 
-struct NetworkClient { // отвечает за загрузку данных по URL
+protocol NetworkRouting {
+    
+    func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void)
+}
+
+struct NetworkClient: NetworkRouting { // отвечает за загрузку данных по URL
 
     private enum NetworkError: Error { // реализация протокола Error для обработки ошибок
         case codeError
     }
-    
+    // отправка запроса на сервер 
     func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void) {
         let request = URLRequest(url: url)
         let task = URLSession.shared.dataTask(with: request) { data, response, error in
