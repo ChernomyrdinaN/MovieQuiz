@@ -61,7 +61,7 @@ extension StatisticService {
     }
     
     private var correctAnswers: Int { // общее количество правильных ответов за все время
-        get { return storage.integer(forKey: Keys.correctAnswers.rawValue) }
+        get { storage.integer(forKey: Keys.correctAnswers.rawValue) }
         set { storage.set(newValue, forKey: Keys.correctAnswers.rawValue) }
     }
     

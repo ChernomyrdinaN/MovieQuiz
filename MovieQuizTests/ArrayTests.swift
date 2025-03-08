@@ -6,16 +6,17 @@
 //  unit-тесты на сабскрипт для безопасного получения элемента из массива по индексу
 
 import Foundation
-import XCTest // фреймворк
-@testable import MovieQuiz // приложение
+import XCTest
+@testable import MovieQuiz
 
-final class ArrayTests: XCTestCase { // класс для тестов
+final class ArrayTests: XCTestCase {
+    
     func testGetValueInRange() throws { // тест на взятие элемента по правильному индексу
         //Given
         let array = [1,1,2,3,5]
         
         //When
-        let value = array [safe: 2] // safe указывает на то, что операция должна быть безопасной, вместо ошибки nil
+        let value = array [safe: 2] // в случае ошибки возвращаем nil
         
         //Then
         XCTAssertNotNil(value)
@@ -32,3 +33,4 @@ final class ArrayTests: XCTestCase { // класс для тестов
         XCTAssertNil(value)
     }
 }
+    

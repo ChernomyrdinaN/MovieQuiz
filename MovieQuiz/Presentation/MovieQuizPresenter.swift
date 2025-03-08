@@ -7,7 +7,8 @@
 
 import UIKit
 
-final class MovieQuizPresenter: QuestionFactoryDelegate {
+final class MovieQuizPresenter {
+    
     private var currentQuestion: QuizQuestion?
     private let questionsAmount: Int = 10
     private var currentQuestionIndex: Int = 0
@@ -16,7 +17,6 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     private var questionFactory: QuestionFactoryProtocol?
     weak var viewController: MovieQuizViewControllerProtocol?
     
-    
     init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         statisticService = StatisticService()
@@ -24,30 +24,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         questionFactory?.loadData()
         viewController.showLoadingIndicator()
     }
-    
-    // загрузка данных с сервера
-    func didLoadDataFromServer() {
-        viewController?.hideLoadingIndicator()
-        questionFactory?.requestNextQuestion()
-    }
-    
-    // данные не загружены
-    func didFailToLoadData(with error: Error) {
-        let message = error.localizedDescription
-        viewController?.showNetworkError(message: message)
-    }
-    
-    // получение следующего вопроса
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question else { // если вопрос не придет работа метода прекратиться
-            return }
-        
-        currentQuestion = question
-        let viewModel = convert(model: question)
-        DispatchQueue.main.async { [weak self] in //обновляем UI только с главной очереди
-            self?.viewController?.show(quiz: viewModel)
-        }
-    }
+
     
     // показ последнего вопроса
     func isLastQuestion() -> Bool {
@@ -102,7 +79,9 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
                 title: "Этот раунд окончен!",
                 message: "Ваш результат: \(self.correctAnswers)/\(self.questionsAmount)\n Количество сыграных квизов: \(statisticService?.gamesCount ?? 1) \n Рекорд: \(statisticService?.bestGame.correct ?? self.correctAnswers)/\(statisticService?.bestGame.total ?? self.questionsAmount) (\(statisticService?.bestGame.date.dateTimeString ?? Date().dateTimeString)) \n Средняя точность: \(String(format: "%.2f", statisticService?.totalAccuracy ?? 0))%",
                 buttonText: "Сыграть еще раз") { [weak self] in
-                    guard let self else { return }
+                    guard let self else {
+                        return
+                    }
                     self.restartGame()
                 }
             self.viewController?.alertDialog?.alertShow(model: alert)
@@ -126,12 +105,41 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
     
     // метод асинхронной отправки
-    private func dispatch() { // приватный метод-диспетчеризации позволяет откладывать выполнение функции на 1 сек
+    private func dispatch() {
         DispatchQueue.main.asyncAfter (deadline: .now() + 1.0) { [weak self] in
-            guard let self else { return }
+            guard let self else {
+                return
+            }
             showNextQuestionOrResults()
             viewController?.hideBorder()
             viewController?.changeStateButton(isEnabled: true)
+        }
+    }
+}
+
+extension MovieQuizPresenter: QuestionFactoryDelegate {
+    
+    // загрузка данных с сервера
+    func didLoadDataFromServer() {
+        viewController?.hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
+    }
+    
+    // данные не загружены
+    func didFailToLoadData(with error: Error) {
+        let message = error.localizedDescription
+        viewController?.showNetworkError(message: message)
+    }
+    
+    // получение следующего вопроса
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question else {
+            return
+        }
+        currentQuestion = question
+        let viewModel = convert(model: question)
+        DispatchQueue.main.async { [weak self] in //обновляем UI с главной очереди
+            self?.viewController?.show(quiz: viewModel)
         }
     }
 }

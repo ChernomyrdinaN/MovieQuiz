@@ -8,32 +8,32 @@
 import XCTest
 
 final class MovieQuizUITests: XCTestCase {
-    var app: XCUIApplication! // примитив приложения
+    var app: XCUIApplication!
     
     override func setUpWithError() throws {
         try super.setUpWithError() // начальное состояние приложения
-        app = XCUIApplication() // проинициализируем приложение
-        app.launch() // откроем приложение
+        app = XCUIApplication()
+        app.launch()
         
         continueAfterFailure = false // если тест не прошел, дальше не идем
     }
     
     override func tearDownWithError() throws {
         try super.tearDownWithError() // сбрасываем состояние приложения
-        app.terminate() // закроем приложение
-        app = nil // обнулим значение
+        app.terminate()
+        app = nil
     }
     
     func testScreenCast() throws {
-        app.buttons["Нет"].tap() // свойство buttons возвращает объект класса XCUIElementQuery
+        app.buttons["Нет"].tap()
     }
     
     func testYesButton() throws {
        // sleep(3) // в зависимости от соединения с сервером можно увеличить время ожидания
         let expectation = self.expectation(description: "Loading expectation") // expectation альтернатива sleep
         let firstPoster = app.images["Poster"]
-        let firstPosterData = firstPoster.screenshot().pngRepresentation //возвращает нам скриншот в виде данных (тип Data)
-        let indexLabel = app.staticTexts["Index"] // лейбл можно получить из объекта XCUIApplication
+        let firstPosterData = firstPoster.screenshot().pngRepresentation // скриншот в виде данных (тип Data)
+        let indexLabel = app.staticTexts["Index"]
         XCTAssertEqual(indexLabel.label, "1/10")
         
         app.buttons["Yes"].tap()
@@ -52,7 +52,7 @@ final class MovieQuizUITests: XCTestCase {
     
     func testNoButton() throws {
         //sleep(3)
-        let expectation = self.expectation(description: "Loading expectation") // expectation альтернатива sleep
+        let expectation = self.expectation(description: "Loading expectation")
         
         let firstPoster = app.images["Poster"]
         let firstPosterData = firstPoster.screenshot().pngRepresentation
@@ -61,10 +61,10 @@ final class MovieQuizUITests: XCTestCase {
         
         app.buttons["No"].tap()
         //sleep(3)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { //ожидание пока второй постер не появится
-            expectation.fulfill() // условие выполнено
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            expectation.fulfill()
         }
-        waitForExpectations(timeout: 3, handler: nil) // ожидание выполнения ожидания
+        waitForExpectations(timeout: 3, handler: nil)
         
         let secondPoster = app.images["Poster"]
         let secondPosterData = secondPoster.screenshot().pngRepresentation
@@ -74,7 +74,7 @@ final class MovieQuizUITests: XCTestCase {
     
     func testGameFinish() {
         sleep(2)
-        for _ in 1...10 { // получаем окончание раунда
+        for _ in 1...10 {
             app.buttons["No"].tap()
             sleep(2)
         }

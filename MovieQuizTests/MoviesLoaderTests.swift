@@ -11,7 +11,7 @@ import XCTest
 
 final class MoviesLoaderTests: XCTestCase {
     
-    struct StubNetworkClient: NetworkRouting { // заглушка(тестовый объект для имитации сетевого клиента)
+    struct StubNetworkClient: NetworkRouting { // тестовый объект для имитации сетевого клиента
         
         enum TestError: Error { // тестовая ошибка
             case test
@@ -25,7 +25,6 @@ final class MoviesLoaderTests: XCTestCase {
                 handler(.success(expectedResponse))
             }
         }
-        
         private var expectedResponse: Data {
             """
             {
@@ -58,11 +57,12 @@ final class MoviesLoaderTests: XCTestCase {
                 ]
               }
             """.data(using: .utf8) ?? Data()
-        } // заранее созданный тестовый ответ от сервера в формате Data
+        } // созданный тестовый ответ от сервера в формате Data
     }
+    
     func testSuccessLoading() throws { // тест на успешную загрузку данных с сервера
         // Given
-        let stubNetworkClient = StubNetworkClient(emulateError: false) // не хотим эмулировать ошибку
+        let stubNetworkClient = StubNetworkClient(emulateError: false) // не эмулируем ошибку
         let loader = MoviesLoader(networkClient: stubNetworkClient)
         
         // When
@@ -84,7 +84,7 @@ final class MoviesLoaderTests: XCTestCase {
     
     func testFailureLoading() throws {
         // Given
-        let stubNetworkClient = StubNetworkClient(emulateError: true) // говорим, что хотим эмулировать ошибку
+        let stubNetworkClient = StubNetworkClient(emulateError: true) // эмулируем ошибку
         let loader = MoviesLoader(networkClient: stubNetworkClient)
         
         // When
@@ -94,13 +94,13 @@ final class MoviesLoaderTests: XCTestCase {
             // Then
             switch result {
             case .failure (let error): // проверяем что пришла ошибка
-                XCTAssertNotNil(error) // проверяем, что ошибка действительно возникла
-                expectation.fulfill() // подтверждаем, что ожидался сбой функции
+                XCTAssertNotNil(error)
+                expectation.fulfill()
             case .success(_): // функция loader.loadMovies работает успешно
-                XCTFail("Unexpected failure") // это ошибка, которая возникает, если функция работает успешно, а не аварийно завершается
+                XCTFail("Unexpected failure")
             }
         }
-        waitForExpectations(timeout: 1) // ожидание выполнения ожидания
+        waitForExpectations(timeout: 1)
     }
 }
 

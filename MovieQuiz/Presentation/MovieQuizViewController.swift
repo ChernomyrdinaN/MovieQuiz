@@ -23,7 +23,6 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         
         counterLabel.font = UIFont(name: "YSDisplay-Medium", size: 20)
         textLabel.font = UIFont(name: "YSDisplay-Bold", size: 23)
-        
         presenter = MovieQuizPresenter(viewController: self)
         presenter.viewController = self
         imageView.layer.cornerRadius = 20
@@ -31,14 +30,17 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         showLoadingIndicator()
     }
     // MARK: - IBActions
+    // нажатие кнопки "Да"
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         presenter.yesButtonClicked()
         changeStateButton(isEnabled: false)
-    } // нажатие кнопки "Да"
+    }
+    
+    // нажатие кнопки "Нет"
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         presenter.noButtonClicked()
         changeStateButton(isEnabled: false)
-    } // нажатие кнопки "Нет"
+    }
     
     // MARK: - Methods
     // показ сконверитированной модели вопроса
@@ -50,17 +52,19 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     
     // показ результатов раунда квиза
     func show(quiz result: QuizResultsViewModel) {
-        let alert = UIAlertController( // создание самого алерта
+        let alert = UIAlertController( // создание алерта
             title: result.title,
             message: result.text,
             preferredStyle: .alert)
         
         let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-            guard self != nil else { return }
+            guard self != nil else {
+                return
+            }
         }
         alert.addAction(action) // добавление кнопки в алерт
-        self.present(alert, animated: true, completion: nil)
-        self.presenter.restartGame()
+        present(alert, animated: true, completion: nil)
+        presenter.restartGame()
     }
     
     // показ рамки
@@ -86,13 +90,15 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     }
     
     // показ сетевой ошибки
-    func showNetworkError(message: String) { // метод показа алерта
+    func showNetworkError(message: String) { 
         hideLoadingIndicator() // скрываем индикатор загрузки
         let alert = AlertModel(
             title: "Что-то пошло не так(",
             message: "Невозможно загрузить данные",
             buttonText: "Попробовать еще раз") { [weak self] in
-                guard let self else { return }
+                guard let self else {
+                    return
+                }
                 self.presenter.restartGame()
             }
         alertDialog?.alertShow(model: alert)

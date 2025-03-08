@@ -24,7 +24,9 @@ final class AlertPresenter {
             message: model.message,
             preferredStyle: .alert)
         let action = UIAlertAction(title: model.buttonText, style: .default) { [weak self] _ in
-            guard self != nil else { return }
+            guard self != nil else {
+                return
+            }
             model.completion?()
         }
         alert.addAction(action)
