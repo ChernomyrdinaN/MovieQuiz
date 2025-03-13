@@ -14,8 +14,8 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
     // MARK: - Properties
-    private var presenter: MovieQuizPresenter! // создаем экземпляр класса MovieQuizPresenter
-    var alertDialog: AlertPresenter? // создаем экземпляр клаcса AlertPresenter
+    private var presenter: MovieQuizPresenter!
+    var alertDialog: AlertPresenter? 
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
